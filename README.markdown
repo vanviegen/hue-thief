@@ -14,7 +14,7 @@ These are devices based on a Silicon Labs EM351 or EM357 chip that communicates 
 
 ## Installation
 
-Make sure you have python v3 and pip. (`sudo apt-get install python-pip3`)
+Make sure you have python v3 and pip. (`sudo apt-get install python3-pip`)
 
 ```sh
 git clone https://github.com/vanviegen/hue-thief
@@ -25,13 +25,19 @@ pip3 install --user -r requirements.txt
 
 ## Usage
 
-Bring the bulb(s) you want to factory reset close to your EZSP device and make sure they're powered. Shutdown any other applications (home assistant, perhaps?) that may be using the EZSP device.
+Bring the bulb(s) you want to factory reset close to your EZSP device. Shutdown any other applications (home assistant, perhaps?) that may be using the EZSP device. Power on the bulb(s) and immediately:
 
 ```sh
 python3 hue-thief /dev/ttyUSB0
 ```
 
 `/dev/ttyUSB0` should be your EZSP device. You should have full permissions on this device file.
+
+In case you're using Ubuntu on Windows (WSL) you'll want to do something like this, assuming the EZSP device is mapped to COM4:
+
+```sh
+sudo python3 ./hue-thief.py /dev/ttyS4
+```
 
 Hue Thief will now scan all Zigbee channels for ZLL-compatible bulbs that are associated with any Zigbee network. When a bulb is found, it will blink a couple of times, and the application will ask if you want to factory reset this bulb. (If you didn't see any blinking, you may be doing your neighbours a favour by choosing 'N' here. :-))
 

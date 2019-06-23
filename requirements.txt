@@ -1,1 +1,2 @@
-git+git://github.com/rcloran/bellows.git#egg=bellows
+bellows==0.7.0
+

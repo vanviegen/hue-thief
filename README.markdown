@@ -52,10 +52,10 @@ If you already have Docker set up, then it extremely simple to build a new `hue-
 ```sh
 git clone https://github.com/vanviegen/hue-thief
 cd hue-thief
-docker build -t hue-thief
+docker build -t hue-thief .
 ```
 
-Don't forget that your Docker host needs internet access during the build process to download the Docker base image, this Github repo and the Pip dependencies.
+Don't forget that your Docker host needs internet access during the build process to download the Docker base image, this Github repo and the Pip dependencies. This whole process could take quite a few minutes. 
 
 ### Docker run
 

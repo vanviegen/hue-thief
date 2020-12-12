@@ -51,12 +51,17 @@ async def steal(device):
         data = response[2]
         dumpPcap(data)
 
+        if len(data)<10: # Not sure what this is, but not a proper response
+            return
+            
         resp = interpanZll.ScanResp.deserialize(data)[0]
-        if resp.transactionId == transaction_id:
-            targets.add(resp.extSrc)
-            frame = interpanZll.AckFrame(seq = resp.seq).serialize()
-            dumpPcap(frame)
-            s.mfglibSendPacket(frame)
+        if resp.transactionId != transaction_id: # Not for us
+            return
+
+        targets.add(resp.extSrc)
+        frame = interpanZll.AckFrame(seq = resp.seq).serialize()
+        dumpPcap(frame)
+        s.mfglibSendPacket(frame)
 
     cbid = s.add_callback(cb)
 

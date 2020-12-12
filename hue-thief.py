@@ -10,13 +10,12 @@ import bellows.cli.util as util
 import interpanZll
 
 class Prompt:
-    def __init__(self, loop=None):
-        self.loop = loop or asyncio.get_event_loop()
-        self.q = asyncio.Queue(loop=self.loop)
-        self.loop.add_reader(sys.stdin, self.got_input)
+    def __init__(self):
+        self.q = asyncio.Queue()
+        asyncio.get_event_loop().add_reader(sys.stdin, self.got_input)
 
     def got_input(self):
-        asyncio.ensure_future(self.q.put(sys.stdin.readline()), loop=self.loop)
+        asyncio.ensure_future(self.q.put(sys.stdin.readline()))
 
     async def __call__(self, msg, end='\n', flush=False):
         print(msg, end=end, flush=flush)
@@ -124,5 +123,4 @@ if len(sys.argv) != 2:
     print("syntax:", sys.argv[0], "/dev/ttyUSB0")
     sys.exit(1)
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(steal(sys.argv[1]))
+asyncio.get_event_loop().run_until_complete(steal(sys.argv[1]))

@@ -30,6 +30,10 @@ Bring the bulb(s) you want to factory reset close to your EZSP device. Shutdown 
 ```sh
 python3 hue-thief /dev/ttyUSB0
 ```
+or if you need to change the baudrate to 115200 for the Home Assistant SkyConnect:
+```sh
+python3 hue-thief /dev/ttyUSB0 --baudrate 115200
+```
 
 `/dev/ttyUSB0` should be your EZSP device. You should have full permissions on this device file.
 

@@ -2,6 +2,7 @@ import asyncio
 import pure_pcapy
 import time
 import sys
+import argparse
 
 from random import randint
 
@@ -22,8 +23,8 @@ class Prompt:
         return (await self.q.get()).rstrip('\n')
 
 
-async def steal(device):
-    s = await util.setup(device, baudrate=57600)
+async def steal(device, baudrate=57600):
+    s = await util.setup(device, baudrate)
     eui64 = await getattr(s, 'getEui64')()
     eui64 = bellows.types.named.EmberEUI64(*eui64)
 
@@ -119,8 +120,13 @@ async def steal(device):
 
     s.close()
 
-if len(sys.argv) != 2:
+parser = argparse.ArgumentParser(description='Set device and optional baudrate')
+parser.add_argument('device', type=str, help='Device path, e.g., /dev/ttyUSB0')
+parser.add_argument('-b', '--baudrate', type=int, default=57600, help='Baud rate (default: 57600)')
+args = parser.parse_args()
+
+if not args.device:
     print("syntax:", sys.argv[0], "/dev/ttyUSB0")
     sys.exit(1)
 
-asyncio.get_event_loop().run_until_complete(steal(sys.argv[1]))
+asyncio.get_event_loop().run_until_complete(steal(args.device, args.baudrate))

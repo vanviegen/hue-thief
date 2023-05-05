@@ -9,12 +9,12 @@ Factory reset Philips Hue bulbs using an EZSP-based Zigbee USB stick. After a re
 These are devices based on a Silicon Labs EM351, EM357 or EM358 chip that communicates with the host PC using the EZSP protocol over a virtual COM port. Which protocol is used depends on which firmware is flashed.
 
 - Silicon Labs/Linear/Nortek/GoControl HubZ/QuickStick Combo (HUSBZB-1)/Elelabs Raspberry Pi shield and USB adapter. These devices should come with an EZSP firmware preloaded.
+- Home Assistant Skyconnect. Reportedly also works, and comes with the right EZSP firmware preloaded.
 - Silicon Labs/Telegesis ETRX357USB/ETRX3USB/ETRX3. These devices come with an AT-command based firmware preloaded. You may be able to flash it with compatible firmware by doing something like this: https://community.home-assistant.io/t/eu-usb-sticks-for-the-new-zigbee-component/16718/10?u=frank
-
 
 ## Installation
 
-Make sure you have python v3 and pip. (`sudo apt-get install python3-pip`)
+Make sure you have python 3.5 or newer and pip. (`sudo apt-get install python3-pip`)
 
 ```sh
 git clone https://github.com/vanviegen/hue-thief
@@ -47,9 +47,9 @@ Hue Thief will now scan all Zigbee channels for ZLL-compatible bulbs that are as
 
 That's it. Your now factory clean bulbs should be discoverable through whatever means your bridge/software offers.
 
-## Docker image
+## Docker
 
-If you already have Docker set up, then it extremely simple to build a new `hue-thief` image using the incorporated Dockerfile.
+If you already have Docker set up, then it's extremely simple to build a `hue-thief` image using the provided `Dockerfile`.
 
 ### Docker build
 
@@ -59,22 +59,16 @@ cd hue-thief
 docker build -t hue-thief .
 ```
 
-Don't forget that your Docker host needs internet access during the build process to download the Docker base image, this Github repo and the Pip dependencies. This whole process could take quite a few minutes. 
-
 ### Docker run
 
 Now that you have built the image, here's what you use every time you want to run it. Alternative devices include ttyUSB0 or ttyAMA0.
 
 ```sh
-ZHA_DEV=ttyUSB1
-docker run --rm --device=/dev/$ZHA_DEV:/dev/$ZHA_DEV -it hue-thief python hue-thief/hue-thief.py /dev/$ZHA_DEV
+DEV=/dev/ttyUSB1 docker run --rm --device=$DEV:$DEV -it hue-thief python hue-thief/hue-thief.py $DEV
 ```
 
 This will create a container from the image you built, and run it with the Zigbee device available inside the container.
 It will automatically run the hue-thief code from this project, then remove the container on completion. 
-
-These instructions should be fine on Linux/MacOS - 
-on Windows you might need to adjust the syntax and/or the device locations.  
 
 
 ### Docker troubleshooting
@@ -82,12 +76,10 @@ on Windows you might need to adjust the syntax and/or the device locations.
 If you want to run a container with a shell for diagnostics use:
 
 ```sh
-ZHA_DEV=ttyUSB1
-docker run --rm --device=/dev/$ZHA_DEV:/dev/$ZHA_DEV -it hue-thief bash
+DEV=/dev/ttyUSB1 docker run --rm --device=$DEV:$DEV -it hue-thief bash
 ```
 
-A common issue is that the device is already in use by another process - 
-Stop other containers that might be using the Zigbee radio and try again. 
+A common issue is that the device is already in use by another process. Stop other containers that might be using the Zigbee radio and try again. 
 
 
 ## Problems

@@ -10,6 +10,7 @@ import bellows
 import bellows.cli.util as util
 import interpanZll
 
+
 class Prompt:
     def __init__(self):
         self.q = asyncio.Queue()
@@ -23,20 +24,20 @@ class Prompt:
         return (await self.q.get()).rstrip('\n')
 
 
-async def steal(device, baudrate=57600):
-    s = await util.setup(device, baudrate)
-    eui64 = await getattr(s, 'getEui64')()
+async def steal(device_path, baudrate, scan_channel):
+    dev = await util.setup(device_path, baudrate)
+    eui64 = await getattr(dev, 'getEui64')()
     eui64 = bellows.types.named.EmberEUI64(*eui64)
 
-    v = await s.mfglibStart(True)
-    util.check(v[0], "Unable to start mfglib")
+    res = await dev.mfglibStart(True)
+    util.check(res[0], "Unable to start mfglib")
 
     DLT_IEEE802_15_4 = 195
     pcap = pure_pcapy.Dumper("log.pcap", 128, DLT_IEEE802_15_4)
     prompt = Prompt()
 
 
-    def dumpPcap(frame):
+    def dump_pcap(frame):
         ts = time.time()
         ts_sec = int(ts)
         ts_usec = int((ts - ts_sec) * 1000000)
@@ -44,31 +45,35 @@ async def steal(device, baudrate=57600):
         pcap.dump(hdr, frame)
 
 
-    def cb(frame_name, response):
+    def handle_incoming(frame_name, response):
         if frame_name != "mfglibRxHandler":
             return
 
         data = response[2]
-        dumpPcap(data)
+        dump_pcap(data)
 
         if len(data)<10: # Not sure what this is, but not a proper response
             return
-            
-        resp = interpanZll.ScanResp.deserialize(data)[0]
+
+        try:
+            resp = interpanZll.ScanResp.deserialize(data)[0]
+        except ValueError:
+            return
         if resp.transactionId != transaction_id: # Not for us
             return
 
         targets.add(resp.extSrc)
         frame = interpanZll.AckFrame(seq = resp.seq).serialize()
-        dumpPcap(frame)
-        s.mfglibSendPacket(frame)
+        dump_pcap(frame)
+        asyncio.create_task(dev.mfglibSendPacket(frame))
 
-    cbid = s.add_callback(cb)
+    cbid = dev.add_callback(handle_incoming)
 
-    for channel in range(11, 27):
+
+    for channel in ([scan_channel] if scan_channel else range(11, 27)):
         print("Scanning on channel",channel)
-        v = await s.mfglibSetChannel(channel)
-        util.check(v[0], "Unable to set channel")
+        res = await dev.mfglibSetChannel(channel)
+        util.check(res[0], "Unable to set channel")
 
         transaction_id = randint(0, 0xFFFFFFFF)
         targets = set()
@@ -80,9 +85,9 @@ async def steal(device, baudrate=57600):
             extSrc = eui64,
             transactionId = transaction_id,
         ).serialize()
-        dumpPcap(frame)
-        r = await s.mfglibSendPacket(frame)
-        util.check(v[0], "Unable to send packet")
+        dump_pcap(frame)
+        res = await dev.mfglibSendPacket(frame)
+        util.check(res[0], "Unable to send packet")
 
         await asyncio.sleep(1)
 
@@ -96,8 +101,8 @@ async def steal(device, baudrate=57600):
                 extDst = target,
                 frameControl = 0xCC21,
             ).serialize()
-            dumpPcap(frame)
-            await s.mfglibSendPacket(frame)
+            dump_pcap(frame)
+            await dev.mfglibSendPacket(frame)
             answer = await prompt("Do you want to factory reset the light that just blinked? [y|n] ")
 
             if answer.strip().lower() == "y":
@@ -110,23 +115,21 @@ async def steal(device, baudrate=57600):
                     extDst = target,
                     frameControl = 0xCC21,
                 ).serialize()
-                dumpPcap(frame)
-                await s.mfglibSendPacket(frame)
+                dump_pcap(frame)
+                await dev.mfglibSendPacket(frame)
                 await asyncio.sleep(1)
 
-    s.remove_callback(cbid)
+    dev.remove_callback(cbid)
 
-    v = await s.mfglibEnd()
+    await dev.mfglibEnd()
 
-    s.close()
+    dev.close()
 
-parser = argparse.ArgumentParser(description='Set device and optional baudrate')
+
+parser = argparse.ArgumentParser(description='Factory reset a Hue light bulb.')
 parser.add_argument('device', type=str, help='Device path, e.g., /dev/ttyUSB0')
 parser.add_argument('-b', '--baudrate', type=int, default=57600, help='Baud rate (default: 57600)')
+parser.add_argument('-c', '--channel', type=int, help='Zigbee channel (defaults to scanning 11 up to 26)')
 args = parser.parse_args()
 
-if not args.device:
-    print("syntax:", sys.argv[0], "/dev/ttyUSB0")
-    sys.exit(1)
-
-asyncio.get_event_loop().run_until_complete(steal(args.device, args.baudrate))
+asyncio.get_event_loop().run_until_complete(steal(args.device, args.baudrate, args.channel))

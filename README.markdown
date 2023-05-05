@@ -1,5 +1,5 @@
 # Hue Thief
-
+, required=True
 
 Factory reset Philips Hue bulbs using an EZSP-based Zigbee USB stick. After a reset, bulbs can easily join any type of compatible bridge.
 
@@ -28,11 +28,11 @@ pip3 install --user -r requirements.txt
 Bring the bulb(s) you want to factory reset close to your EZSP device. Shutdown any other applications (home assistant, perhaps?) that may be using the EZSP device. Power on the bulb(s) and immediately:
 
 ```sh
-python3 hue-thief /dev/ttyUSB0
+python3 hue-thief.py /dev/ttyUSB0
 ```
 or if you need to change the baudrate to 115200 for the Home Assistant SkyConnect:
 ```sh
-python3 hue-thief /dev/ttyUSB0 --baudrate 115200
+python3 hue-thief.py /dev/ttyUSB0 --baudrate 115200
 ```
 
 `/dev/ttyUSB0` should be your EZSP device. You should have full permissions on this device file.
@@ -40,7 +40,7 @@ python3 hue-thief /dev/ttyUSB0 --baudrate 115200
 In case you're using Ubuntu on Windows (WSL) you'll want to do something like this, assuming the EZSP device is mapped to COM4:
 
 ```sh
-sudo python3 ./hue-thief.py /dev/ttyS4
+sudo python3 hue-thief.py /dev/ttyS4
 ```
 
 Hue Thief will now scan all Zigbee channels for ZLL-compatible bulbs that are associated with any Zigbee network. When a bulb is found, it will blink a couple of times, and the application will ask if you want to factory reset this bulb. (If you didn't see any blinking, you may be doing your neighbours a favour by choosing 'N' here. :-))

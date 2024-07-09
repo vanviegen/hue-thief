@@ -38,13 +38,12 @@ async def steal(device_path, baudrate, scan_channel):
 
 
     def dump_pcap(frame):
+        frame = bytes(frame)
         ts = time.time()
         ts_sec = int(ts)
         ts_usec = int((ts - ts_sec) * 1000000)
         hdr = pure_pcapy.Pkthdr(ts_sec, ts_usec, len(frame), len(frame))
-
-        # In some instances the frame will be a type zigpy.types.basic.LVBytes
-        pcap.dump(hdr, bytes(frame))
+        pcap.dump(hdr, frame)
 
 
     def handle_incoming(frame_name, response):

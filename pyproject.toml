@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "hue-thief"
+version = "0.1.1"
+description = "Factory reset Philips Hue bulbs using an EZSP-based Zigbee USB stick. After a reset, bulbs can easily join any type of compatible bridge."
+authors = ["Frank van Viegen <git@vanviegen.net>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+bellows = "^0.39.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

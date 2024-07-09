@@ -1,5 +1,4 @@
 # Hue Thief
-, required=True
 
 Factory reset Philips Hue bulbs using an EZSP-based Zigbee USB stick. After a reset, bulbs can easily join any type of compatible bridge.
 

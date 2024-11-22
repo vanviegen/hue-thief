@@ -6,8 +6,8 @@ authors = ["Frank van Viegen <git@vanviegen.net>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-bellows = "^0.39.1"
+python = "^3.9"
+bellows = "^0.42.0"
 
 
 [build-system]

@@ -11,6 +11,7 @@ These are devices based on a Silicon Labs EM351, EM357 or EM358 chip that commun
 - Home Assistant Skyconnect. Reportedly also works, and comes with the right EZSP firmware preloaded.
 - Silicon Labs/Telegesis ETRX357USB/ETRX3USB/ETRX3. These devices come with an AT-command based firmware preloaded. You may be able to flash it with compatible firmware by doing something like this: https://community.home-assistant.io/t/eu-usb-sticks-for-the-new-zigbee-component/16718/10?u=frank
 
+
 ## Installation
 
 Make sure you have python 3.5 or newer and pip. (`sudo apt-get install python3-pip`)
@@ -21,10 +22,14 @@ cd hue-thief
 pip3 install --user -r requirements.txt
 ```
 
+Or if you want to use Poetry, do a `poetry install` instead of the above pip command.
+
 
 ## Usage
 
-Bring the bulb(s) you want to factory reset close to your EZSP device. Shutdown any other applications (home assistant, perhaps?) that may be using the EZSP device. Power on the bulb(s) and immediately:
+- Shutdown any other applications (home assistant, perhaps?) that may be using the EZSP device. 
+- Bring the bulb(s) you want to factory reset close to your EZSP device. Ideally within 30 cm (1 foot). 
+- Remove mains power from the bulb, power it back on and within a couple of minutes after that run:
 
 ```sh
 python3 hue-thief.py /dev/ttyUSB0
@@ -34,7 +39,7 @@ or if you need to change the baudrate to 115200 for the Home Assistant SkyConnec
 python3 hue-thief.py /dev/ttyUSB0 --baudrate 115200
 ```
 
-`/dev/ttyUSB0` should be your EZSP device. You should have full permissions on this device file.
+`/dev/ttyUSB0` should be your EZSP device. You should have full permissions on this device file (or run the command as root).
 
 In case you're using Ubuntu on Windows (WSL) you'll want to do something like this, assuming the EZSP device is mapped to COM4:
 
@@ -45,6 +50,7 @@ sudo python3 hue-thief.py /dev/ttyS4
 Hue Thief will now scan all Zigbee channels for ZLL-compatible bulbs that are associated with any Zigbee network. When a bulb is found, it will blink a couple of times, and the application will ask if you want to factory reset this bulb. (If you didn't see any blinking, you may be doing your neighbours a favour by choosing 'N' here. :-))
 
 That's it. Your now factory clean bulbs should be discoverable through whatever means your bridge/software offers.
+
 
 ## Docker
 
@@ -63,19 +69,18 @@ docker build -t hue-thief .
 Now that you have built the image, here's what you use every time you want to run it. Alternative devices include ttyUSB0 or ttyAMA0.
 
 ```sh
-DEV=/dev/ttyUSB1 docker run --rm --device=$DEV:$DEV -it hue-thief python hue-thief/hue-thief.py $DEV
+docker run --rm --device=/dev/ttyUSB0:/dev/ttyEZSP -it hue-thief /dev/ttyEZSP
 ```
 
 This will create a container from the image you built, and run it with the Zigbee device available inside the container.
 It will automatically run the hue-thief code from this project, then remove the container on completion. 
-
 
 ### Docker troubleshooting
 
 If you want to run a container with a shell for diagnostics use:
 
 ```sh
-DEV=/dev/ttyUSB1 docker run --rm --device=$DEV:$DEV -it hue-thief bash
+docker run --rm --device=/dev/ttyUSB0:/dev/ttyEZSP --entrypoint /bin/bash -it hue-thief
 ```
 
 A common issue is that the device is already in use by another process. Stop other containers that might be using the Zigbee radio and try again. 

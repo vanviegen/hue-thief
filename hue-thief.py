@@ -124,7 +124,7 @@ async def steal(device_path, baudrate, scan_channel):
 
     await dev.mfglibEnd()
 
-    dev.close()
+    await dev.disconnect()
 
 
 parser = argparse.ArgumentParser(description='Factory reset a Hue light bulb.')
